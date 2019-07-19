@@ -10,38 +10,15 @@ export const uploadFile = async (
   file: File | Blob,
   option?: Options = { name: '' }
 ) => {
-  const filename = file instanceof File ? file.name : option.name;
-  const response = await client.post('/users.s3Upload', {
-    kind: file.type,
-    size: file.size,
-    filename,
-  });
+  const formData = new FormData();
+  formData.append('name', file.name || option.name);
+  formData.append('file', file);
+
+  const response = await client.post('/users.upload', formData, { contentType: false });
 
   invariant(response, 'Response should be available');
 
-  const data = response.data;
-  const asset = data.asset;
-  const formData = new FormData();
-
-  for (const key in data.form) {
-    formData.append(key, data.form[key]);
-  }
-
-  // $FlowFixMe
-  if (file.blob) {
-    // $FlowFixMe
-    formData.append('file', file.file);
-  } else {
-    formData.append('file', file);
-  }
-
-  const options: Object = {
-    method: 'post',
-    body: formData,
-  };
-  await fetch(data.uploadUrl, options);
-
-  return asset;
+  return response.data
 };
 
 export const dataUrlToBlob = (dataURL: string) => {

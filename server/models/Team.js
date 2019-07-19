@@ -5,7 +5,6 @@ import fs from 'fs';
 import util from 'util';
 import path from 'path';
 import { DataTypes, sequelize, Op } from '../sequelize';
-import { publicS3Endpoint, uploadToS3FromUrl } from '../utils/s3';
 import {
   stripSubdomain,
   RESERVED_SUBDOMAINS,
@@ -87,23 +86,6 @@ Team.associate = models => {
   Team.hasMany(models.Collection, { as: 'collections' });
   Team.hasMany(models.Document, { as: 'documents' });
   Team.hasMany(models.User, { as: 'users' });
-};
-
-const uploadAvatar = async model => {
-  const endpoint = publicS3Endpoint();
-
-  if (model.avatarUrl && !model.avatarUrl.startsWith(endpoint)) {
-    try {
-      const newUrl = await uploadToS3FromUrl(
-        model.avatarUrl,
-        `avatars/${model.id}/${uuid.v4()}`
-      );
-      if (newUrl) model.avatarUrl = newUrl;
-    } catch (err) {
-      // we can try again next time
-      console.error(err);
-    }
-  }
 };
 
 Team.prototype.provisionSubdomain = async function(subdomain) {
@@ -194,16 +176,5 @@ Team.prototype.activateUser = async function(user: User, admin: User) {
     suspendedAt: null,
   });
 };
-
-Team.prototype.collectionIds = async function(paranoid: boolean = true) {
-  let models = await Collection.findAll({
-    attributes: ['id', 'private'],
-    where: { teamId: this.id, private: false },
-    paranoid,
-  });
-  return models.map(c => c.id);
-};
-
-Team.beforeSave(uploadAvatar);
 
 export default Team;

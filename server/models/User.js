@@ -4,7 +4,6 @@ import uuid from 'uuid';
 import JWT from 'jsonwebtoken';
 import subMinutes from 'date-fns/sub_minutes';
 import { DataTypes, sequelize, encryptedFields } from '../sequelize';
-import { publicS3Endpoint, uploadToS3FromUrl } from '../utils/s3';
 import { sendEmail } from '../mailer';
 import { Star, Team, Collection, NotificationSetting, ApiKey } from '.';
 
@@ -111,34 +110,6 @@ User.prototype.getJwtToken = function() {
   return JWT.sign({ id: this.id }, this.jwtSecret);
 };
 
-User.prototype.getEmailSigninToken = function() {
-  if (this.service && this.service !== 'email') {
-    throw new Error('Cannot generate email signin token for OAuth user');
-  }
-
-  return JWT.sign(
-    { id: this.id, createdAt: new Date().toISOString() },
-    this.jwtSecret
-  );
-};
-
-const uploadAvatar = async model => {
-  const endpoint = publicS3Endpoint();
-  const { avatarUrl } = model;
-
-  if (
-    avatarUrl &&
-    !avatarUrl.startsWith(endpoint) &&
-    !avatarUrl.startsWith(DEFAULT_AVATAR_HOST)
-  ) {
-    const newUrl = await uploadToS3FromUrl(
-      avatarUrl,
-      `avatars/${model.id}/${uuid.v4()}`
-    );
-    if (newUrl) model.avatarUrl = newUrl;
-  }
-};
-
 const setRandomJwtSecret = model => {
   model.jwtSecret = crypto.randomBytes(64).toString('hex');
 };
@@ -188,7 +159,6 @@ const checkLastAdmin = async model => {
 
 User.beforeDestroy(checkLastAdmin);
 User.beforeDestroy(removeIdentifyingInfo);
-User.beforeSave(uploadAvatar);
 User.beforeCreate(setRandomJwtSecret);
 User.afterCreate(async user => {
   const team = await Team.findByPk(user.teamId);
