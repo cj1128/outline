@@ -32,16 +32,24 @@ class ApiClient {
         modifiedPath = path;
       }
     } else if (method === 'POST' || method === 'PUT') {
-      body = data ? JSON.stringify(data) : undefined;
+      if(options.contentType == null) {
+        body = data ? JSON.stringify(data) : undefined;
+      } else {
+        body = data
+      }
     }
 
     // Construct headers
     const headers = new Headers({
       Accept: 'application/json',
-      'Content-Type': 'application/json',
       'cache-control': 'no-cache',
       pragma: 'no-cache',
     });
+
+    if(options.contentType == null) {
+      headers.set('Content-Type', `application/json`);
+    }
+
     if (stores.auth.authenticated) {
       invariant(stores.auth.token, 'JWT token not set properly');
       headers.set('Authorization', `Bearer ${stores.auth.token}`);

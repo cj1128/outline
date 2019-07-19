@@ -4,7 +4,6 @@ import uuid from 'uuid';
 import JWT from 'jsonwebtoken';
 import subMinutes from 'date-fns/sub_minutes';
 import { DataTypes, sequelize, encryptedFields } from '../sequelize';
-import { publicS3Endpoint, uploadToS3FromUrl } from '../utils/s3';
 import { sendEmail } from '../mailer';
 import { Star, Team, Collection, NotificationSetting, ApiKey } from '.';
 
@@ -95,18 +94,6 @@ User.prototype.getJwtToken = function() {
   return JWT.sign({ id: this.id }, this.jwtSecret);
 };
 
-const uploadAvatar = async model => {
-  const endpoint = publicS3Endpoint();
-
-  if (model.avatarUrl && !model.avatarUrl.startsWith(endpoint)) {
-    const newUrl = await uploadToS3FromUrl(
-      model.avatarUrl,
-      `avatars/${model.id}/${uuid.v4()}`
-    );
-    if (newUrl) model.avatarUrl = newUrl;
-  }
-};
-
 const setRandomJwtSecret = model => {
   model.jwtSecret = crypto.randomBytes(64).toString('hex');
 };
@@ -156,7 +143,6 @@ const checkLastAdmin = async model => {
 
 User.beforeDestroy(checkLastAdmin);
 User.beforeDestroy(removeIdentifyingInfo);
-User.beforeSave(uploadAvatar);
 User.beforeCreate(setRandomJwtSecret);
 User.afterCreate(async user => {
   const team = await Team.findByPk(user.teamId);

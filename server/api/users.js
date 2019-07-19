@@ -2,12 +2,7 @@
 import uuid from 'uuid';
 import Router from 'koa-router';
 import format from 'date-fns/format';
-import {
-  makePolicy,
-  getSignature,
-  publicS3Endpoint,
-  makeCredential,
-} from '../utils/s3';
+import { uploadFile } from '../utils/qiniu';
 import { ValidationError } from '../errors';
 import { Event, User, Team } from '../models';
 import auth from '../middlewares/authentication';
@@ -15,6 +10,7 @@ import pagination from './middlewares/pagination';
 import userInviter from '../commands/userInviter';
 import { presentUser } from '../presenters';
 import policy from '../policies';
+import multer from 'koa-multer';
 
 const { authorize } = policy;
 const router = new Router();
@@ -62,55 +58,12 @@ router.post('users.update', auth(), async ctx => {
   };
 });
 
-router.post('users.s3Upload', auth(), async ctx => {
-  const { filename, kind, size } = ctx.body;
-  ctx.assertPresent(filename, 'filename is required');
-  ctx.assertPresent(kind, 'kind is required');
-  ctx.assertPresent(size, 'size is required');
-
-  const s3Key = uuid.v4();
-  const key = `uploads/${ctx.state.user.id}/${s3Key}/${filename}`;
-  const credential = makeCredential();
-  const longDate = format(new Date(), 'YYYYMMDDTHHmmss\\Z');
-  const policy = makePolicy(credential, longDate);
-  const endpoint = publicS3Endpoint();
-  const url = `${endpoint}/${key}`;
-
-  await Event.create({
-    name: 'user.s3Upload',
-    data: {
-      filename,
-      kind,
-      size,
-      url,
-    },
-    teamId: ctx.state.user.teamId,
-    userId: ctx.state.user.id,
-  });
-
+router.post('users.upload', auth(), multer({ storage: multer.memoryStorage() }).any(), async ctx => {
   ctx.body = {
     data: {
-      maxUploadSize: process.env.AWS_S3_UPLOAD_MAX_SIZE,
-      uploadUrl: endpoint,
-      form: {
-        'Cache-Control': 'max-age=31557600',
-        'Content-Type': kind,
-        acl: 'public-read',
-        key,
-        policy,
-        'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-        'x-amz-credential': credential,
-        'x-amz-date': longDate,
-        'x-amz-signature': getSignature(policy),
-      },
-      asset: {
-        contentType: kind,
-        name: filename,
-        url,
-        size,
-      },
+      url: await uploadFile(ctx.req.body.name, ctx.req.files[0].buffer),
     },
-  };
+  }
 });
 
 // Admin specific

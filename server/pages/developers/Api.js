@@ -39,27 +39,14 @@ export default function Api() {
             </Arguments>
           </Method>
 
-          <Method method="users.s3Upload" label="Get S3 upload credentials">
+          <Method method="users.upload" label="upload file">
             <Description>
-              You can upload small files and images as part of your documents.
-              All files are stored using Amazon S3. Instead of uploading files
-              to Outline, you need to upload them directly to S3 with special
-              credentials which can be obtained through this endpoint.
+              Upload file to qiniu.
             </Description>
             <Arguments>
               <Argument
                 id="filename"
                 description="Filename of the uploaded file"
-                required
-              />
-              <Argument
-                id="kind"
-                description="Mimetype of the document"
-                required
-              />
-              <Argument
-                id="size"
-                description="Filesize of the document"
                 required
               />
             </Arguments>
