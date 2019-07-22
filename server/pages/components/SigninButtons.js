@@ -7,6 +7,7 @@ import Flex from '../../../shared/components/Flex';
 import Notice from '../../../shared/components/Notice';
 import GoogleLogo from '../../../shared/components/GoogleLogo';
 import SlackLogo from '../../../shared/components/SlackLogo';
+import GithubLogo from '../../../shared/components/GithubLogo';
 import breakpoint from 'styled-components-breakpoint';
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   googleSigninEnabled: boolean,
   slackSigninEnabled: boolean,
   guestSigninEnabled?: boolean,
+  githubSigninEnabled: boolean,
 };
 
 const SigninButtons = ({
@@ -21,6 +23,7 @@ const SigninButtons = ({
   slackSigninEnabled,
   googleSigninEnabled,
   guestSigninEnabled,
+  githubSigninEnabled,
 }: Props) => {
   return (
     <Wrapper>
@@ -39,6 +42,17 @@ const SigninButtons = ({
           </Button>
           <LastLogin>
             {lastSignedIn === 'slack' && 'You signed in with Slack previously'}
+          </LastLogin>
+        </Column>
+      )}
+      {githubSigninEnabled && (
+        <Column column>
+          <Button href={signin('github')}>
+            <GithubLogo />
+            <Spacer>Sign In with Github</Spacer>
+          </Button>
+          <LastLogin>
+            {lastSignedIn === 'github' && 'You signed in with Github previously'}
           </LastLogin>
         </Column>
       )}

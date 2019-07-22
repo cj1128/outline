@@ -14,7 +14,7 @@ export const uploadFile = async (
   formData.append('name', file.name || option.name);
   formData.append('file', file);
 
-  const response = await client.post('/users.upload', formData, { contentType: false });
+  const response = await client.post('/users.upload', formData, { contentTypeDisabled: true });
 
   invariant(response, 'Response should be available');
 
