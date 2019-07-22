@@ -17,14 +17,37 @@ class ApiClient {
   }
 
   // options:
-  // contentTypeDisabled: 是否要带 contentType
-  // contentType: 指定 contentType
+  // headers: {}
   fetch = async (
     path: string,
     method: string,
     data: ?Object,
     options: Object = {}
   ) => {
+    // Construct headers
+    const headers = new Headers({
+      Accept: 'application/json',
+      'cache-control': 'no-cache',
+      pragma: 'no-cache',
+    });
+
+    if(options.headers) {
+      for(let key in options.headers) {
+        headers.set(key, options.headers[key])
+      }
+    }
+
+    if(headers.get('Content-Type') == null) {
+      if(!(data instanceof FormData)) {
+        headers.set('Content-Type', 'application/json')
+      }
+    }
+
+    if (stores.auth.authenticated) {
+      invariant(stores.auth.token, 'JWT token not set properly');
+      headers.set('Authorization', `Bearer ${stores.auth.token}`);
+    }
+
     let body;
     let modifiedPath;
 
@@ -35,35 +58,11 @@ class ApiClient {
         modifiedPath = path;
       }
     } else if (method === 'POST' || method === 'PUT') {
-      if(options.contentType != null) {
-        body = data
+      if(headers.get("Content-Type") === "application/json") {
+        body = data ? JSON.stringify(data) : undefined;
       } else {
-        if(options.contentTypeDisabled) {
-          body = data
-        } else {
-          body = data ? JSON.stringify(data) : undefined;
-        }
+        body = data
       }
-    }
-
-    // Construct headers
-    const headers = new Headers({
-      Accept: 'application/json',
-      'cache-control': 'no-cache',
-      pragma: 'no-cache',
-    });
-
-    if(options.contentType != null) {
-      headers.set('Content-Type', options.contentType);
-    } else {
-      if(!options.contentTypeDisabled) {
-        headers.set('Content-Type', 'application/json');
-      }
-    }
-
-    if (stores.auth.authenticated) {
-      invariant(stores.auth.token, 'JWT token not set properly');
-      headers.set('Authorization', `Bearer ${stores.auth.token}`);
     }
 
     let response;

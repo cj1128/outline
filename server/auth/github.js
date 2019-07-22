@@ -56,11 +56,11 @@ router.get('github.callback', auth({ required: false }), async ctx => {
 
   const [team, isFirstUser] = await Team.findOrCreate({
     where: {
-      githubId: 'shuoye-team',
+      githubId: 'default-team',
     },
     defaults: {
-      name: 'shuoye',
-      avatarUrl: 'http://pv0urvrtx.bkt.clouddn.com/IMG_0319.jpg',
+      name: 'default-team',
+      avatarUrl: 'http://asset.haibao6688.com/doc/team-avatar.png',
     },
   });
 

@@ -20,7 +20,7 @@ const uploadFile = (name, buffer) => new Promise((resolve, reject) => {
 
   formUploader.put(
     uploadToken,
-    name,
+    'doc/' + name,
     buffer,
     putExtra,
     (respErr, respBody, respInfo) => {
