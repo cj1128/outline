@@ -6,18 +6,21 @@ import { signin } from '../../../shared/utils/routeHelpers';
 import Flex from '../../../shared/components/Flex';
 import GoogleLogo from '../../../shared/components/GoogleLogo';
 import SlackLogo from '../../../shared/components/SlackLogo';
+import GithubLogo from '../../../shared/components/GithubLogo';
 import breakpoint from 'styled-components-breakpoint';
 
 type Props = {
   lastSignedIn?: string,
   googleSigninEnabled: boolean,
   slackSigninEnabled: boolean,
+  githubSigninEnabled: boolean,
 };
 
 const SigninButtons = ({
   lastSignedIn,
   slackSigninEnabled,
   googleSigninEnabled,
+  githubSigninEnabled,
 }: Props) => {
   return (
     <Wrapper>
@@ -29,6 +32,17 @@ const SigninButtons = ({
           </Button>
           <LastLogin>
             {lastSignedIn === 'slack' && 'You signed in with Slack previously'}
+          </LastLogin>
+        </Column>
+      )}
+      {githubSigninEnabled && (
+        <Column column>
+          <Button href={signin('github')}>
+            <GithubLogo />
+            <Spacer>Sign In with Github</Spacer>
+          </Button>
+          <LastLogin>
+            {lastSignedIn === 'github' && 'You signed in with Github previously'}
           </LastLogin>
         </Column>
       )}

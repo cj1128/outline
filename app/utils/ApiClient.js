@@ -16,6 +16,9 @@ class ApiClient {
     this.userAgent = 'OutlineFrontend';
   }
 
+  // options:
+  // contentTypeDisabled: 是否要带 contentType
+  // contentType: 指定 contentType
   fetch = async (
     path: string,
     method: string,
@@ -32,10 +35,14 @@ class ApiClient {
         modifiedPath = path;
       }
     } else if (method === 'POST' || method === 'PUT') {
-      if(options.contentType == null) {
-        body = data ? JSON.stringify(data) : undefined;
-      } else {
+      if(options.contentType != null) {
         body = data
+      } else {
+        if(options.contentTypeDisabled) {
+          body = data
+        } else {
+          body = data ? JSON.stringify(data) : undefined;
+        }
       }
     }
 
@@ -46,8 +53,12 @@ class ApiClient {
       pragma: 'no-cache',
     });
 
-    if(options.contentType == null) {
-      headers.set('Content-Type', `application/json`);
+    if(options.contentType != null) {
+      headers.set('Content-Type', options.contentType);
+    } else {
+      if(!options.contentTypeDisabled) {
+        headers.set('Content-Type', 'application/json');
+      }
     }
 
     if (stores.auth.authenticated) {
