@@ -54,13 +54,20 @@ router.get('github.callback', auth({ required: false }), async ctx => {
 
   const info = await fetchUser(data.access_token)
 
+  // not in the whitelist
+  if(!process.env.GITHUB_WHITELIST.split(",").includes(info.login)) {
+    ctx.status = 400
+    ctx.body = "invalid github user"
+    return
+  }
+
   const [team, isFirstUser] = await Team.findOrCreate({
     where: {
       githubId: 'default-team',
     },
     defaults: {
       name: 'default-team',
-      avatarUrl: 'http://asset.haibao6688.com/doc/team-avatar.png',
+      avatarUrl: 'http://asset.haibao6688.com/doc/team-avatar.png?v=1', // force refresh cache
     },
   });
 
