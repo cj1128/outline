@@ -28,6 +28,7 @@ const SigninButtons = ({
   return (
     <Wrapper>
       {!slackSigninEnabled &&
+        !githubSigninEnabled &&
         !googleSigninEnabled && (
           <Notice>
             Neither Slack or Google sign in is enabled. You must configure at
